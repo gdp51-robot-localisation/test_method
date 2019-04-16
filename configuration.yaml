@@ -1,0 +1,9 @@
+Stereo_Calibration:
+    Camera1:    #use for stereo image programmes
+        path  : /Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01/Calibration    #required for: stereo_calibration
+        filename : 
+        filenamelist: flist.txt     #required for: stereo_calibration
+    Troubleshooting: 
+        sampleimage  : image2.jpg     #required for: stereo_calibration
+    Calibrationgridsize : 7     #required for: stereo_calibration
+    Gridspacing : 0.04        #in meters

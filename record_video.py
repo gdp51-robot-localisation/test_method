@@ -5,8 +5,13 @@ cap = cv.VideoCapture(0)
 
 # Define the codec and create VideoWriter object
 
-fourcc = cv.VideoWriter_fourcc(*'MJPG')
-out = cv.VideoWriter('output.mp4',fourcc, 25.0, (1920,1080))
+# fourcc = cv.VideoWriter_fourcc(*'XVID')
+# fourcc = cv.VideoWriter_fourcc(*'h264')
+fourcc = cv.VideoWriter_fourcc(*'X264')
+# fourcc = cv.FOURCC('8', 'B', 'P', 'S')
+# out = cv.VideoWriter('output_h264_30.mov',fourcc, 20.0, (1920,1080))
+# out = cv.VideoWriter('output_zeros.avi',-1, 30, (1920,1080))
+out = cv.VideoWriter('output_mkv_20.mkv',fourcc, 20.0, (1920,1080))
 
 while(cap.isOpened()):
     ret, frame = cap.read()

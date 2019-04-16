@@ -36,6 +36,10 @@ import sys
 import os, os.path
 import time
 
+
+
+
+
 folder_path = sys.argv[1]
 no_images = sys.argv[2]
 
@@ -49,9 +53,10 @@ cap = cv2.VideoCapture(0)
 
 for i in range(1,no_images+1):
     print ("Saving image", i, "of", no_images)
-    time.sleep(5)
+    time.sleep(7)
     _, img1 = cap.read()
     i = str(i)
     cv2.imwrite(os.path.join(folder_path, ("image" + i + ".jpg")), img1)
+    os.system( "say Next" )
 
 
