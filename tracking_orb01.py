@@ -30,18 +30,24 @@ dst_global = []
 
 position = []
 heading = []
+reading_time = []
+fps_array = []
 # plt.axis([0, 1280, 0, 720])
 
-tbl_upper_horiz = 1539
-tbl_lower_horiz = 343
-tbl_upper_vert = 1008
-tbl_lower_vert = 110
+tbl_lower_horiz = 344 #343
+tbl_upper_horiz = 1533 #1539
+tbl_lower_vert = 95 #110
+tbl_upper_vert = 987 #1008
+
+mtx_1 = np.array([[7615.086684842451, 0.0, 934.6619126632753],[0.0, 7589.141593519471, 560.8448319169089],[0.0, 0.0, 1.0]])
+dist_1 = np.array([3.3036628821574143, -284.6056262111876, -0.00990095676339995, -0.01422899829406913, -3.8589533787510892])
 
 # cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
 # cv2.resizeWindow("Frame", 600,350)
 
 while True:
     _, img2 = cap.read()
+    img2 = cv2.undistort(img2, mtx_1, dist_1)
 
     # Start timer
     timer = cv2.getTickCount()
@@ -131,10 +137,14 @@ while True:
         # cY = [(1.5 * (a / (tbl_upper_vert - tbl_lower_vert))) for a in y]
 
         cX = 2000 * ((cX - tbl_lower_horiz) / (tbl_upper_horiz - tbl_lower_horiz))
-        cY = 1500 * ((cY - tbl_lower_vert) / (tbl_upper_vert - tbl_lower_vert))
+        cY = 1500 - (1500 * ((cY - tbl_lower_vert) / (tbl_upper_vert - tbl_lower_vert)))
 
         position.extend([cX,cY])
         heading.append(robot_angle)
+        time_delta = datetime.now() - startTime
+        seconds_reading = time_delta.total_seconds()
+        reading_time.append(seconds_reading)
+        fps_array.append(fps)
 
         # sf = 0.04
         # scale_factor = sf/AC_length
@@ -212,6 +222,10 @@ position = np.array(position)
 position = position.reshape(-1,2)
 heading = np.array(heading)
 heading = heading.reshape(-1,1)
+reading_time = np.array(reading_time)
+reading_time = reading_time.reshape(-1,1)
+fps_array = np.array(fps_array)
+fps_array = fps_array.reshape(-1,1)
 # print (position)
 
 x, y = position.T
@@ -229,7 +243,7 @@ x, y = position.T
 
 plt.plot(x, y)
 plt.xlim(0, 2000)
-plt.ylim(1500, 0)
+plt.ylim(0, 1500)
 # plt.set(xlabel='Width (m)', ylabel='Height (m)', title='Position')
 plt.xlabel('Width (m)')
 plt.ylabel('Height (m)')
@@ -248,9 +262,9 @@ print("Finish position:", position[(len(position) - 1)])
 # cap.release()
 # cv2.destroyAllWindows()
 timestr = time.strftime("%Y%m%d-%H%M%S")
-position_plus_heading = np.concatenate((position, heading), axis=1)
+position_plus_heading = np.concatenate((reading_time, position, heading, fps_array), axis=1)
 
-np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts" + timestr + ".csv"), position_plus_heading, delimiter=",")
+np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts_ORB_" + timestr + ".csv"), position_plus_heading, delimiter=",")
 
 # np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts.csv"), pts_global, delimiter=",")
 # np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "dst.csv"), dst_global, delimiter=",")

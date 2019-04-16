@@ -16,10 +16,12 @@ img1 = cv2.imread('Pattern3_small.jpg',0)          # queryImage
 
 # Create SURF object. You can specify params here or later.
 # Here I set Hessian Threshold to 400
-surf = cv2.xfeatures2d.SURF_create(hessianThreshold = 400)
+hessian_input = 2700
+surf = cv2.xfeatures2d.SURF_create(hessianThreshold = hessian_input, extended = 1)
+# upright = false
 
 cap = cv2.VideoCapture(0)
-# cap = cv2.VideoCapture("output_H264_30.mov")
+# cap = cv2.VideoCapture("output_QT_1080.mov")
 
 # find the keypoints and descriptors with SIFT
 kp1, des1 = surf.detectAndCompute(img1,None)
@@ -30,18 +32,24 @@ dst_global = []
 position = []
 heading = []
 reading_time = []
+fps_array = []
 # plt.axis([0, 1280, 0, 720])
 
-tbl_upper_horiz = 1539
-tbl_lower_horiz = 343
-tbl_upper_vert = 1008
-tbl_lower_vert = 110
+mtx_1 = np.array([[7615.086684842451, 0.0, 934.6619126632753],[0.0, 7589.141593519471, 560.8448319169089],[0.0, 0.0, 1.0]])
+dist_1 = np.array([3.3036628821574143, -284.6056262111876, -0.00990095676339995, -0.01422899829406913, -3.8589533787510892])
+
+tbl_lower_horiz = 344.3218434916 #343
+tbl_upper_horiz = 1533.3151804436 #1539
+tbl_lower_vert = 95.2119867521 #110
+tbl_upper_vert = 986.8746805046 #1008
+
 
 # cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
 # cv2.resizeWindow("Frame", 600,350)
 
 while True:
     _, img2 = cap.read()
+    img2 = cv2.undistort(img2, mtx_1, dist_1)
     # img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
     # Start timer
@@ -125,6 +133,7 @@ while True:
         time_delta = datetime.now() - startTime
         seconds_reading = time_delta.total_seconds()
         reading_time.append(seconds_reading)
+        fps_array.append(fps)
 
 
         # sf = 0.04
@@ -149,10 +158,10 @@ while True:
         img2 = cv2.putText(img2, "Press ESC to finish test", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
         img2 = cv2.putText(img2, "Heading: " + str(int(robot_angle)), (100,50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
         img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-        img2 = cv2.line(img2,(tbl_lower_horiz,tbl_lower_vert),(tbl_upper_horiz,tbl_lower_vert),(255,0,0),1)
-        img2 = cv2.line(img2,(tbl_lower_horiz,tbl_upper_vert),(tbl_upper_horiz,tbl_upper_vert),(255,0,0),1)
-        img2 = cv2.line(img2,(tbl_lower_horiz,tbl_lower_vert),(tbl_lower_horiz,tbl_upper_vert),(255,0,0),1)
-        img2 = cv2.line(img2,(tbl_upper_horiz,tbl_lower_vert),(tbl_upper_horiz,tbl_upper_vert),(255,0,0),1)
+        img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_lower_vert)),(round(tbl_upper_horiz),round(tbl_lower_vert)),(255,0,0),1)
+        img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_upper_vert)),(round(tbl_upper_horiz),round(tbl_upper_vert)),(255,0,0),1)
+        img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_lower_vert)),(round(tbl_lower_horiz),round(tbl_upper_vert)),(255,0,0),1)
+        img2 = cv2.line(img2,(round(tbl_upper_horiz),round(tbl_lower_vert)),(round(tbl_upper_horiz),round(tbl_upper_vert)),(255,0,0),1)
 
     else:
         # print ("Not enough matches are found - %d/%d") % (len(good),MIN_MATCH_COUNT)
@@ -205,6 +214,8 @@ heading = np.array(heading)
 heading = heading.reshape(-1,1)
 reading_time = np.array(reading_time)
 reading_time = reading_time.reshape(-1,1)
+fps_array = np.array(fps_array)
+fps_array = fps_array.reshape(-1,1)
 # print (position)
 
 x, y = position.T
@@ -241,9 +252,9 @@ print("Finish position:", position[(len(position) - 1)])
 # cap.release()
 # cv2.destroyAllWindows()
 timestr = time.strftime("%Y%m%d-%H%M%S")
-position_plus_heading = np.concatenate((reading_time, position, heading), axis=1)
+position_plus_heading = np.concatenate((reading_time, position, heading, fps_array), axis=1)
 
-np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts" + timestr + ".csv"), position_plus_heading, delimiter=",")
+np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts_SURF_H" + str(hessian_input) + "_" + timestr + ".csv"), position_plus_heading, delimiter=",")
 
 # np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts.csv"), pts_global, delimiter=",")
 # np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "dst.csv"), dst_global, delimiter=",")
