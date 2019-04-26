@@ -52,11 +52,69 @@ dist_1 = np.array([3.3036628821574143, -284.6056262111876, -0.00990095676339995,
 # tbl_upper_horiz = 1920
 # tbl_lower_vert = 0
 # tbl_upper_vert = 1080
+# tbl_lower_horiz = 340
+# tbl_upper_horiz = 1550
+# tbl_lower_vert = 85
+# tbl_upper_vert = 1000
 
-tbl_lower_horiz = 346.1780369763
-tbl_upper_horiz = 1537.0186928970
-tbl_lower_vert = 92.8811144128
-tbl_upper_vert = 987.6189652272
+# VALIDATION RUN
+# tbl_lower_horiz = 346.1780369763
+# tbl_upper_horiz = 1537.0186928970
+# tbl_lower_vert = 92.8811144128
+# tbl_upper_vert = 987.6189652272
+
+# tl = (np.float32(tbl_lower_vert),np.float32(tbl_lower_horiz))
+# tr = (np.float32(tbl_lower_vert),np.float32(tbl_upper_horiz))
+# br = (np.float32(tbl_upper_vert),np.float32(tbl_upper_horiz))
+# bl = (np.float32(tbl_upper_vert),np.float32(tbl_lower_horiz))
+
+# tl = (np.float32(tbl_lower_horiz),np.float32(tbl_lower_vert))
+# tr = (np.float32(tbl_upper_horiz),np.float32(tbl_lower_vert))
+# br = (np.float32(tbl_upper_horiz),np.float32(tbl_upper_vert))
+# bl = (np.float32(tbl_lower_horiz),np.float32(tbl_upper_vert))
+# tl = np.float32([341.24725,87.78945])
+# tr = np.float32([1541.55817,88.25892])
+# br = np.float32([1543.52226,990.32708])
+# bl = np.float32([339.34469,990.79555])
+tl = np.float32([338.22159,87.75624])
+tr = np.float32([1539.12241,87.43325])
+br = np.float32([1539.39872,990.41745])
+bl = np.float32([335.05152,991.53404])
+
+rect = (tl, tr, bl, br)
+# print(rect)
+rect = np.array(rect)
+# print(rect)
+
+# compute the width of the new image, which will be the
+# maximum distance between bottom-right and bottom-left
+# x-coordiates or the top-right and top-left x-coordinates
+widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+maxWidth = max(int(widthA), int(widthB))
+print(maxWidth)
+
+# compute the height of the new image, which will be the
+# maximum distance between the top-right and bottom-right
+# y-coordinates or the top-left and bottom-left y-coordinates
+heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+maxHeight = max(int(heightA), int(heightB))
+print(maxHeight)
+
+# now that we have the dimensions of the new image, construct
+# the set of destination points to obtain a "birds eye view",
+# (i.e. top-down view) of the image, again specifying points
+# in the top-left, top-right, bottom-right, and bottom-left
+# order
+dst = np.array([
+[0, 0],
+[maxWidth - 1, 0],
+[0, maxHeight - 1],
+[maxWidth - 1, maxHeight - 1]], dtype = "float32")
+
+# compute the perspective transform matrix and then apply it
+M_persp = cv2.getPerspectiveTransform(rect, dst)
 
 
 # cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
@@ -64,7 +122,8 @@ tbl_upper_vert = 987.6189652272
 
 while True:
     _, img2 = cap.read()
-    img2 = cv2.undistort(img2, mtx_1, dist_1)
+    # img2 = cv2.undistort(img2, mtx_1, dist_1)
+    img2 = cv2.warpPerspective(img2, M_persp, (maxWidth, maxHeight))
     # img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
     # Start timer
@@ -132,6 +191,7 @@ while True:
         # print (robot_angle)
         cX = float(((dst[2,0,0] - dst[0,0,0])/2.0) + dst[0,0,0])
         cY = float(((dst[2,0,1] - dst[0,0,1])/2.0) + dst[0,0,1])
+
         # print (cX)
         # print (cY)
 
@@ -140,8 +200,11 @@ while True:
         # cY = [a - tbl_lower_vert for a in y]
         # cY = [(1.5 * (a / (tbl_upper_vert - tbl_lower_vert))) for a in y]
 
-        cX = 2000 * ((cX - tbl_lower_horiz) / (tbl_upper_horiz - tbl_lower_horiz))
-        cY = 1500 - (1500 * ((cY - tbl_lower_vert) / (tbl_upper_vert - tbl_lower_vert)))
+        # cX = 2000 * ((cX) / (tbl_upper_horiz - tbl_lower_horiz))
+        # cY = 1500 - (1500 * ((cY) / (tbl_upper_vert - tbl_lower_vert)))
+
+        cX = 2000 * (cX / maxWidth)
+        cY = 1500 - (1500 * (cY / maxHeight))
 
         position.extend([cX,cY])
         heading.append(robot_angle)
@@ -173,10 +236,10 @@ while True:
         img2 = cv2.putText(img2, "Press ESC to finish test", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
         img2 = cv2.putText(img2, "Heading: " + str(int(robot_angle)), (100,50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
         img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
-        img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_lower_vert)),(round(tbl_upper_horiz),round(tbl_lower_vert)),(255,0,0),1)
-        img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_upper_vert)),(round(tbl_upper_horiz),round(tbl_upper_vert)),(255,0,0),1)
-        img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_lower_vert)),(round(tbl_lower_horiz),round(tbl_upper_vert)),(255,0,0),1)
-        img2 = cv2.line(img2,(round(tbl_upper_horiz),round(tbl_lower_vert)),(round(tbl_upper_horiz),round(tbl_upper_vert)),(255,0,0),1)
+        # img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_lower_vert)),(round(tbl_upper_horiz),round(tbl_lower_vert)),(255,0,0),1)
+        # img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_upper_vert)),(round(tbl_upper_horiz),round(tbl_upper_vert)),(255,0,0),1)
+        # img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_lower_vert)),(round(tbl_lower_horiz),round(tbl_upper_vert)),(255,0,0),1)
+        # img2 = cv2.line(img2,(round(tbl_upper_horiz),round(tbl_lower_vert)),(round(tbl_upper_horiz),round(tbl_upper_vert)),(255,0,0),1)
 
     else:
         # print ("Not enough matches are found - %d/%d") % (len(good),MIN_MATCH_COUNT)

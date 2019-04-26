@@ -33,6 +33,11 @@ position = []
 heading = []
 reading_time = []
 fps_array = []
+pattern_width = []
+BL = []
+BR = []
+TL = []
+TR = []
 # plt.axis([0, 1280, 0, 720])
 
 mtx_1 = np.array([[7615.086684842451, 0.0, 934.6619126632753],[0.0, 7589.141593519471, 560.8448319169089],[0.0, 0.0, 1.0]])
@@ -48,15 +53,17 @@ dist_1 = np.array([3.3036628821574143, -284.6056262111876, -0.00990095676339995,
 # tbl_lower_vert = 95.2119867521 #110
 # tbl_upper_vert = 986.8746805046 #1008
 
-# tbl_lower_horiz = 0
-# tbl_upper_horiz = 1920
-# tbl_lower_vert = 0
-# tbl_upper_vert = 1080
+tbl_lower_horiz = 0
+tbl_upper_horiz = 1920
+tbl_lower_vert = 0
+tbl_upper_vert = 1080
 
-tbl_lower_horiz = 346.1780369763
-tbl_upper_horiz = 1537.0186928970
-tbl_lower_vert = 92.8811144128
-tbl_upper_vert = 987.6189652272
+
+
+# tbl_lower_horiz = 346.1780369763
+# tbl_upper_horiz = 1537.0186928970
+# tbl_lower_vert = 92.8811144128
+# tbl_upper_vert = 987.6189652272
 
 
 # cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
@@ -111,9 +118,10 @@ while True:
         pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
         dst = cv2.perspectiveTransform(pts,M)
 
-            
-
-        # print (dst)
+        dst_bl = dst[1]
+        dst_tl = dst[0]
+        dst_br = dst[2]
+        dst_tr = dst[3]
 
         A = np.array([dst[1,0,0],dst[1,0,1]])
         B = np.array([dst[1,0,0],0])
@@ -132,23 +140,31 @@ while True:
         # print (robot_angle)
         cX = float(((dst[2,0,0] - dst[0,0,0])/2.0) + dst[0,0,0])
         cY = float(((dst[2,0,1] - dst[0,0,1])/2.0) + dst[0,0,1])
+        # cX_delta = float((dst[2,0,0] - dst[0,0,0])/2.0)
+        # cY_delta = float((dst[2,0,1] - dst[0,0,1])/2.0)
         # print (cX)
         # print (cY)
+        # BL = 
 
         # cX = [a - tbl_lower_horiz for a in x]
         # cX = [(2 * (a / (tbl_upper_horiz - tbl_lower_horiz))) for a in x]
         # cY = [a - tbl_lower_vert for a in y]
         # cY = [(1.5 * (a / (tbl_upper_vert - tbl_lower_vert))) for a in y]
 
-        cX = 2000 * ((cX - tbl_lower_horiz) / (tbl_upper_horiz - tbl_lower_horiz))
-        cY = 1500 - (1500 * ((cY - tbl_lower_vert) / (tbl_upper_vert - tbl_lower_vert)))
+        # cX = 2000 * ((cX - tbl_lower_horiz) / (tbl_upper_horiz - tbl_lower_horiz))
+        # cY = 1500 - (1500 * ((cY - tbl_lower_vert) / (tbl_upper_vert - tbl_lower_vert)))
 
         position.extend([cX,cY])
+        # pattern_width.extend([cX_delta,cY_delta])
         heading.append(robot_angle)
         time_delta = datetime.now() - startTime
         seconds_reading = time_delta.total_seconds()
         reading_time.append(seconds_reading)
         fps_array.append(fps)
+        BL.extend(dst_bl)
+        BR.extend(dst_br)
+        TL.extend(dst_tl)
+        TR.extend(dst_tr)
 
 
         # sf = 0.04
@@ -225,12 +241,22 @@ cv2.destroyAllWindows()
 
 position = np.array(position)
 position = position.reshape(-1,2)
+pattern_width = np.array(pattern_width)
+pattern_width = pattern_width.reshape(-1,2)
 heading = np.array(heading)
 heading = heading.reshape(-1,1)
 reading_time = np.array(reading_time)
 reading_time = reading_time.reshape(-1,1)
 fps_array = np.array(fps_array)
 fps_array = fps_array.reshape(-1,1)
+BL = np.array(BL)
+BL = BL.reshape(-1,2)
+BR = np.array(BR)
+BR = BR.reshape(-1,2)
+TL = np.array(TL)
+TL = TL.reshape(-1,2)
+TR = np.array(TR)
+TR = TR.reshape(-1,2)
 # print (position)
 
 x, y = position.T
@@ -246,30 +272,35 @@ x, y = position.T
 #        title='Position')
 # plt.grid()
 
-plt.plot(x, y)
-plt.xlim(0, 2000)
-plt.ylim(0, 1500)
-# plt.set(xlabel='Width (m)', ylabel='Height (m)', title='Position')
-plt.xlabel('Width (m)')
-plt.ylabel('Height (m)')
-plt.title('Position')
-plt.grid()
-# plt.add_patch(arrow)
-# plt.arrow(cX,cY,AC_scaled[0],AC_scaled[1],head_width=(sf/2), head_length=(sf/2), fc='k', ec='k')
-# plt.savefig("test.png")
-plt.show()
+# plt.plot(x, y)
+# plt.xlim(0, 2000)
+# plt.ylim(0, 1500)
+# # plt.set(xlabel='Width (m)', ylabel='Height (m)', title='Position')
+# plt.xlabel('Width (m)')
+# plt.ylabel('Height (m)')
+# plt.title('Position')
+# plt.grid()
+# # plt.add_patch(arrow)
+# # plt.arrow(cX,cY,AC_scaled[0],AC_scaled[1],head_width=(sf/2), head_length=(sf/2), fc='k', ec='k')
+# # plt.savefig("test.png")
+# plt.show()
 
 print("Time taken:", datetime.now() - startTime)
 print("Start position:", position[0])
 print("Finish position:", position[(len(position) - 1)])
+print("Mean position:", np.mean(position,0))
+print("Mean BL:", np.mean(BL,0))
+print("Mean BR:", np.mean(BR,0))
+print("Mean TL:", np.mean(TL,0))
+print("Mean TR:", np.mean(TR,0))
 
 
 # cap.release()
 # cv2.destroyAllWindows()
-timestr = time.strftime("%Y%m%d-%H%M%S")
-position_plus_heading = np.concatenate((reading_time, position, heading, fps_array), axis=1)
+# timestr = time.strftime("%Y%m%d-%H%M%S")
+# position_plus_heading = np.concatenate((reading_time, position, heading, fps_array), axis=1)
 
-np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts_SURF_H" + str(hessian_input) + "_" + timestr + ".csv"), position_plus_heading, delimiter=",")
+# np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts_SURF_H" + str(hessian_input) + "_" + timestr + ".csv"), position_plus_heading, delimiter=",")
 
 # np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "pts.csv"), pts_global, delimiter=",")
 # np.savetxt(os.path.join("/Users/michaelleat/Documents/Education/MechEng/Year4/GDP/TestMethod/Code/01", "dst.csv"), dst_global, delimiter=",")
