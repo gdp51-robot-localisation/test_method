@@ -29,6 +29,7 @@ kp1, des1 = surf.detectAndCompute(img1,None)
 pts_global = []
 dst_global = []
 
+position_raw = []
 position = []
 heading = []
 reading_time = []
@@ -101,7 +102,7 @@ dist_1 = np.array([3.3036628821574143, -284.6056262111876, -0.00990095676339995,
 # tl = np.float32([346.43539429,92.95640564])
 # tr = np.float32([1538.23413086,91.81403351])
 
-# # Robot test 24/04/19 & 29/04/19
+# # Robot test 24/04/19
 bl = np.float32([283.0,1028.0])
 br = np.float32([1596.3,1030.2])
 tl = np.float32([286.5,46.7])
@@ -234,8 +235,8 @@ while True:
         # print(cX2)
         cY2 = float(((dst[3,0,1] - dst[1,0,1])/2.0) + dst[1,0,1])
         # print(cY2)
-        cX = (cX1 + cX2)/2.0
-        cY = (cY1 + cY2)/2.0
+        cX_raw = (cX1 + cX2)/2.0
+        cY_raw = (cY1 + cY2)/2.0
         # print (cX)
         # print (cY)
 
@@ -247,9 +248,10 @@ while True:
         # cX = 2000 * ((cX) / (tbl_upper_horiz - tbl_lower_horiz))
         # cY = 1500 - (1500 * ((cY) / (tbl_upper_vert - tbl_lower_vert)))
 
-        cX = 2000 * (cX / maxWidth)
-        cY = 1500 - (1500 * (cY / maxHeight))
+        cX = 2000 * (cX_raw / maxWidth)
+        cY = 1500 - (1500 * (cY_raw / maxHeight))
 
+        position_raw.extend([cX_raw, cY_raw])
         position.extend([cX,cY])
         heading.append(robot_angle)
         time_delta = datetime.now() - startTime
@@ -279,7 +281,19 @@ while True:
         img2 = cv2.circle(img2, (dst[0,0,0], dst[0,0,1]), 10, (255,0,0))
         img2 = cv2.putText(img2, "Press ESC to finish test", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
         img2 = cv2.putText(img2, "Heading: " + str(int(robot_angle)), (100,50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
+        # img2 = cv2.putText(img2, "Position: " + str(int(position[(len(position) - 1)])), (100,80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2)
         img2 = cv2.polylines(img2,[np.int32(dst)],True,255,3, cv2.LINE_AA)
+
+        # print (len(position_raw))
+
+        position_raw_formatted = np.array(position_raw)
+        position_raw_formatted = np.int16(position_raw_formatted).reshape(-1,2)
+
+        if len(position_raw_formatted) > 2:
+            for i in range(2, (len(position_raw_formatted) - 1)):
+                img2 = cv2.line(img2,tuple(position_raw_formatted[i-1]),tuple(position_raw_formatted[i]),(0,255,0),thickness = 3)
+
+
         # img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_lower_vert)),(round(tbl_upper_horiz),round(tbl_lower_vert)),(255,0,0),1)
         # img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_upper_vert)),(round(tbl_upper_horiz),round(tbl_upper_vert)),(255,0,0),1)
         # img2 = cv2.line(img2,(round(tbl_lower_horiz),round(tbl_lower_vert)),(round(tbl_lower_horiz),round(tbl_upper_vert)),(255,0,0),1)
