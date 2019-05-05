@@ -37,9 +37,6 @@ import os, os.path
 import time
 
 
-
-
-
 folder_path = sys.argv[1]
 no_images = sys.argv[2]
 
@@ -50,6 +47,7 @@ if not os.path.exists(folder_path):
     os.makedirs(folder_path)
 
 cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture("dearborn_st_bridge_4k.mp4")
 
 for i in range(1,no_images+1):
     print ("Saving image", i, "of", no_images)
